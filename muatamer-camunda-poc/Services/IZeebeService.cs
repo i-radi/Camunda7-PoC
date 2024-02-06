@@ -9,9 +9,9 @@ namespace muatamer_camunda_poc.Services
         public Task<ITopology> Status();
         public Task<IDeployResourceResponse> Deploy(string modelFile);
         public void StartWorkers();
-        public Task<string> CreateWorkflowInstance(string bpmProcessId, string groupId);
-        public Task<string> VoucherPaid(string groupId);
-        public void ApproveVoucher(bool isApproved, string groupId);
+        public Task<IProcessInstanceResponse> CreateWorkflowInstance(string bpmProcessId, int groupId);
+        public Task<string> VoucherPaid(string groupId, string processInstanceKey);
+        public void ApproveVoucher(bool isApproved, string groupId, long processInstanceKey);
 
 
     }

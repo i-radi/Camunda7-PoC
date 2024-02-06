@@ -2,5 +2,5 @@
 
 public class NotEmptyGroupDTO
 {
-    public string GroupId { get; set;}
+    public string isEmpty { get; set; }
 }

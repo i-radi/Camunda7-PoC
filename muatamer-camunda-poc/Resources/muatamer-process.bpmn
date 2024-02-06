@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_01n0cu9" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.19.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.4.0">
-  <bpmn:process id="Process_1dzn46z" name="muatamer-process" isExecutable="true">
-    <bpmn:startEvent id="StartEvent_1">
+  <bpmn:process id="muatamer-process" name="muatamer-process" isExecutable="true">
+    <bpmn:startEvent id="Start" name="Start">
       <bpmn:outgoing>Flow_1py37iz</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:endEvent id="Event_0taxdxk">
+    <bpmn:endEvent id="End" name="End">
       <bpmn:incoming>Flow_1hpyw1e</bpmn:incoming>
       <bpmn:incoming>Flow_1ttjy87</bpmn:incoming>
       <bpmn:incoming>Flow_1tkryqx</bpmn:incoming>
@@ -12,111 +12,103 @@
       <bpmn:incoming>Flow_1ypm9zc</bpmn:incoming>
       <bpmn:incoming>Flow_1vpxm9t</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:exclusiveGateway id="Gateway_11avfai">
+    <bpmn:exclusiveGateway id="check-not-mepty-group" name="check-not-mepty-group" default="Flow_1vpxm9t">
       <bpmn:incoming>Flow_0pilw7k</bpmn:incoming>
       <bpmn:outgoing>Flow_1oozw3l</bpmn:outgoing>
       <bpmn:outgoing>Flow_1vpxm9t</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:exclusiveGateway id="Gateway_0p938cn">
+    <bpmn:exclusiveGateway id="check-group-not-more-than-100" name="check-group-not-more-than-100" default="Flow_1ypm9zc">
       <bpmn:incoming>Flow_075hsi0</bpmn:incoming>
       <bpmn:outgoing>Flow_1fd2z3i</bpmn:outgoing>
       <bpmn:outgoing>Flow_1ypm9zc</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="Flow_1py37iz" sourceRef="StartEvent_1" targetRef="Activity_0huepse" />
-    <bpmn:sequenceFlow id="Flow_0pilw7k" sourceRef="Activity_0huepse" targetRef="Gateway_11avfai" />
-    <bpmn:sequenceFlow id="Flow_1oozw3l" sourceRef="Gateway_11avfai" targetRef="Activity_0htu6g2">
+    <bpmn:sequenceFlow id="Flow_1py37iz" sourceRef="Start" targetRef="Not-Empty-Group" />
+    <bpmn:sequenceFlow id="Flow_0pilw7k" sourceRef="Not-Empty-Group" targetRef="check-not-mepty-group" />
+    <bpmn:sequenceFlow id="Flow_1oozw3l" sourceRef="check-not-mepty-group" targetRef="Not-Greater-Than-100">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isEmpty = "False"</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_075hsi0" sourceRef="Activity_0htu6g2" targetRef="Gateway_0p938cn" />
-    <bpmn:sequenceFlow id="Flow_1fd2z3i" sourceRef="Gateway_0p938cn" targetRef="Activity_18m5kbp">
+    <bpmn:sequenceFlow id="Flow_075hsi0" sourceRef="Not-Greater-Than-100" targetRef="check-group-not-more-than-100" />
+    <bpmn:sequenceFlow id="Flow_1fd2z3i" sourceRef="check-group-not-more-than-100" targetRef="Same-Nationality">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=MuatamerCount &lt; 100</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:serviceTask id="Activity_0huepse" name="Not Empty Group">
+    <bpmn:serviceTask id="Not-Empty-Group" name="Not Empty Group">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="validate-group-not-empty" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1py37iz</bpmn:incoming>
       <bpmn:outgoing>Flow_0pilw7k</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:serviceTask id="Activity_0htu6g2" name="Not Greater Than 100">
+    <bpmn:serviceTask id="Not-Greater-Than-100" name="Not Greater Than 100">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="validate-group-not-greater-than-100" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1oozw3l</bpmn:incoming>
       <bpmn:outgoing>Flow_075hsi0</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:serviceTask id="Activity_18m5kbp" name="Same Nationality">
+    <bpmn:serviceTask id="Same-Nationality" name="Same Nationality">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="validate-group-has-same-nationality" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1fd2z3i</bpmn:incoming>
       <bpmn:outgoing>Flow_0yb9d30</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:exclusiveGateway id="Gateway_04yizvl">
+    <bpmn:exclusiveGateway id="check-group-same-nationality" name="check-group-same-nationality" default="Flow_1h5s736">
       <bpmn:incoming>Flow_0yb9d30</bpmn:incoming>
       <bpmn:outgoing>Flow_160eba4</bpmn:outgoing>
       <bpmn:outgoing>Flow_1h5s736</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="Flow_0yb9d30" sourceRef="Activity_18m5kbp" targetRef="Gateway_04yizvl" />
-    <bpmn:sequenceFlow id="Flow_160eba4" sourceRef="Gateway_04yizvl" targetRef="Activity_18zubnb">
+    <bpmn:sequenceFlow id="Flow_0yb9d30" sourceRef="Same-Nationality" targetRef="check-group-same-nationality" />
+    <bpmn:sequenceFlow id="Flow_160eba4" sourceRef="check-group-same-nationality" targetRef="Create-Voucher">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isSameNationality = "True"</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:serviceTask id="Activity_18zubnb" name="Create Voucher">
+    <bpmn:serviceTask id="Create-Voucher" name="Create Voucher">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="create-voucher" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_160eba4</bpmn:incoming>
       <bpmn:outgoing>Flow_1xmpw9p</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:eventBasedGateway id="Gateway_0ls4dwi">
+    <bpmn:eventBasedGateway id="wait-paid" name="wait-paid">
       <bpmn:incoming>Flow_02emhpa</bpmn:incoming>
       <bpmn:outgoing>Flow_0u06wqi</bpmn:outgoing>
       <bpmn:outgoing>Flow_0pxylgj</bpmn:outgoing>
     </bpmn:eventBasedGateway>
-    <bpmn:intermediateCatchEvent id="Event_17gj667" name="Voucher Paid">
+    <bpmn:intermediateCatchEvent id="Voucher-Paid" name="Voucher Paid">
       <bpmn:incoming>Flow_0u06wqi</bpmn:incoming>
       <bpmn:outgoing>Flow_1hpyw1e</bpmn:outgoing>
       <bpmn:messageEventDefinition id="MessageEventDefinition_1ctnn6i" messageRef="Message_0ep61ap" />
     </bpmn:intermediateCatchEvent>
-    <bpmn:sequenceFlow id="Flow_0u06wqi" sourceRef="Gateway_0ls4dwi" targetRef="Event_17gj667" />
-    <bpmn:intermediateCatchEvent id="Event_0rufmjj" name="2 min for paid voucher">
+    <bpmn:sequenceFlow id="Flow_0u06wqi" sourceRef="wait-paid" targetRef="Voucher-Paid" />
+    <bpmn:intermediateCatchEvent id="timer-2min" name="2 min for paid voucher">
       <bpmn:incoming>Flow_0pxylgj</bpmn:incoming>
       <bpmn:outgoing>Flow_1ba6l9o</bpmn:outgoing>
       <bpmn:timerEventDefinition id="TimerEventDefinition_03hxuew">
         <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT2M</bpmn:timeDuration>
       </bpmn:timerEventDefinition>
     </bpmn:intermediateCatchEvent>
-    <bpmn:sequenceFlow id="Flow_0pxylgj" sourceRef="Gateway_0ls4dwi" targetRef="Event_0rufmjj" />
-    <bpmn:sequenceFlow id="Flow_1hpyw1e" sourceRef="Event_17gj667" targetRef="Event_0taxdxk" />
-    <bpmn:sequenceFlow id="Flow_1ba6l9o" sourceRef="Event_0rufmjj" targetRef="Activity_0blntj0" />
-    <bpmn:sequenceFlow id="Flow_1ttjy87" sourceRef="Activity_0blntj0" targetRef="Event_0taxdxk" />
-    <bpmn:sequenceFlow id="Flow_1xmpw9p" sourceRef="Activity_18zubnb" targetRef="Activity_1vic88d" />
-    <bpmn:userTask id="Activity_1vic88d" name="ApproveVoucher">
+    <bpmn:sequenceFlow id="Flow_0pxylgj" sourceRef="wait-paid" targetRef="timer-2min" />
+    <bpmn:sequenceFlow id="Flow_1hpyw1e" sourceRef="Voucher-Paid" targetRef="End" />
+    <bpmn:sequenceFlow id="Flow_1ba6l9o" sourceRef="timer-2min" targetRef="Cancel-Voucher" />
+    <bpmn:sequenceFlow id="Flow_1ttjy87" sourceRef="Cancel-Voucher" targetRef="End" />
+    <bpmn:sequenceFlow id="Flow_1xmpw9p" sourceRef="Create-Voucher" targetRef="Approve-Voucher" />
+    <bpmn:userTask id="Approve-Voucher" name="ApproveVoucher">
       <bpmn:incoming>Flow_1xmpw9p</bpmn:incoming>
       <bpmn:outgoing>Flow_1wd716l</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:exclusiveGateway id="Gateway_11iwkmv">
+    <bpmn:exclusiveGateway id="check-approve" name="check-approve" default="Flow_1tkryqx">
       <bpmn:incoming>Flow_1wd716l</bpmn:incoming>
       <bpmn:outgoing>Flow_02emhpa</bpmn:outgoing>
       <bpmn:outgoing>Flow_1tkryqx</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="Flow_1wd716l" sourceRef="Activity_1vic88d" targetRef="Gateway_11iwkmv" />
-    <bpmn:sequenceFlow id="Flow_02emhpa" sourceRef="Gateway_11iwkmv" targetRef="Gateway_0ls4dwi">
+    <bpmn:sequenceFlow id="Flow_1wd716l" sourceRef="Approve-Voucher" targetRef="check-approve" />
+    <bpmn:sequenceFlow id="Flow_02emhpa" sourceRef="check-approve" targetRef="wait-paid">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isApproved = "True"</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_1tkryqx" sourceRef="Gateway_11iwkmv" targetRef="Event_0taxdxk">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isApproved = "False"</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_1h5s736" sourceRef="Gateway_04yizvl" targetRef="Event_0taxdxk">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isSameNationality = "False"</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_1ypm9zc" sourceRef="Gateway_0p938cn" targetRef="Event_0taxdxk">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=MuatamerCount &gt;= 100</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_1vpxm9t" sourceRef="Gateway_11avfai" targetRef="Event_0taxdxk">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">=isEmpty = "True"</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:serviceTask id="Activity_0blntj0" name="Cancel Voucher">
+    <bpmn:sequenceFlow id="Flow_1tkryqx" sourceRef="check-approve" targetRef="End" />
+    <bpmn:sequenceFlow id="Flow_1h5s736" sourceRef="check-group-same-nationality" targetRef="End" />
+    <bpmn:sequenceFlow id="Flow_1ypm9zc" sourceRef="check-group-not-more-than-100" targetRef="End" />
+    <bpmn:sequenceFlow id="Flow_1vpxm9t" sourceRef="check-not-mepty-group" targetRef="End" />
+    <bpmn:serviceTask id="Cancel-Voucher" name="Cancel Voucher">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="cancel-voucher" />
       </bpmn:extensionElements>
@@ -126,63 +118,84 @@
   </bpmn:process>
   <bpmn:message id="Message_0ep61ap" name="Voucher_Paid">
     <bpmn:extensionElements>
-      <zeebe:subscription correlationKey="=&#34;Voucher_Paid&#34;" />
+      <zeebe:subscription correlationKey="=processInstanceKey" />
     </bpmn:extensionElements>
   </bpmn:message>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1dzn46z">
-      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="muatamer-process">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="Start">
         <dc:Bounds x="172" y="212" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="178" y="255" width="25" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_11avfai_di" bpmnElement="Gateway_11avfai" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="Event_0taxdxk_di" bpmnElement="End">
+        <dc:Bounds x="562" y="342" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="530" y="353" width="20" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_11avfai_di" bpmnElement="check-not-mepty-group" isMarkerVisible="true">
         <dc:Bounds x="395" y="75" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="377" y="45" width="86" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_0p938cn_di" bpmnElement="Gateway_0p938cn" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="Gateway_0p938cn_di" bpmnElement="check-group-not-more-than-100" isMarkerVisible="true">
         <dc:Bounds x="645" y="75" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="628" y="45" width="84" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0b6p98a_di" bpmnElement="Activity_0huepse">
+      <bpmndi:BPMNShape id="Activity_0b6p98a_di" bpmnElement="Not-Empty-Group">
         <dc:Bounds x="230" y="60" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1o4p2r3_di" bpmnElement="Activity_0htu6g2">
+      <bpmndi:BPMNShape id="Activity_1o4p2r3_di" bpmnElement="Not-Greater-Than-100">
         <dc:Bounds x="500" y="60" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_14avj7t_di" bpmnElement="Activity_18m5kbp">
+      <bpmndi:BPMNShape id="Activity_14avj7t_di" bpmnElement="Same-Nationality">
         <dc:Bounds x="750" y="60" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_04yizvl_di" bpmnElement="Gateway_04yizvl" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="Gateway_04yizvl_di" bpmnElement="check-group-same-nationality" isMarkerVisible="true">
         <dc:Bounds x="905" y="75" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="890" y="45" width="81" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_186l9fp_di" bpmnElement="Activity_18zubnb">
+      <bpmndi:BPMNShape id="Activity_186l9fp_di" bpmnElement="Create-Voucher">
         <dc:Bounds x="1060" y="60" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1i1jq9k_di" bpmnElement="Activity_1vic88d">
-        <dc:Bounds x="1060" y="200" width="100" height="80" />
-        <bpmndi:BPMNLabel />
+      <bpmndi:BPMNShape id="Gateway_0yn8b0s_di" bpmnElement="wait-paid">
+        <dc:Bounds x="915" y="345" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="958" y="343" width="44" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_11iwkmv_di" bpmnElement="Gateway_11iwkmv" isMarkerVisible="true">
-        <dc:Bounds x="1085" y="345" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0taxdxk_di" bpmnElement="Event_0taxdxk">
-        <dc:Bounds x="562" y="342" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_17gj667_di" bpmnElement="Event_17gj667">
+      <bpmndi:BPMNShape id="Event_17gj667_di" bpmnElement="Voucher-Paid">
         <dc:Bounds x="732" y="242" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="719" y="285" width="65" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_0yn8b0s_di" bpmnElement="Gateway_0ls4dwi">
-        <dc:Bounds x="915" y="345" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0rufmjj_di" bpmnElement="Event_0rufmjj">
+      <bpmndi:BPMNShape id="Event_0rufmjj_di" bpmnElement="timer-2min">
         <dc:Bounds x="922" y="442" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="909" y="485" width="67" height="27" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_10pj93p_di" bpmnElement="Activity_0blntj0">
+      <bpmndi:BPMNShape id="Activity_1i1jq9k_di" bpmnElement="Approve-Voucher">
+        <dc:Bounds x="1060" y="200" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_11iwkmv_di" bpmnElement="check-approve" isMarkerVisible="true">
+        <dc:Bounds x="1085" y="345" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1154" y="360" width="73" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_10pj93p_di" bpmnElement="Cancel-Voucher">
         <dc:Bounds x="680" y="420" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_1py37iz_di" bpmnElement="Flow_1py37iz">
@@ -214,20 +227,6 @@
         <di:waypoint x="955" y="100" />
         <di:waypoint x="1060" y="100" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1xmpw9p_di" bpmnElement="Flow_1xmpw9p">
-        <di:waypoint x="1110" y="140" />
-        <di:waypoint x="1110" y="200" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1hpyw1e_di" bpmnElement="Flow_1hpyw1e">
-        <di:waypoint x="732" y="260" />
-        <di:waypoint x="580" y="260" />
-        <di:waypoint x="580" y="342" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1ttjy87_di" bpmnElement="Flow_1ttjy87">
-        <di:waypoint x="680" y="460" />
-        <di:waypoint x="580" y="460" />
-        <di:waypoint x="580" y="378" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0u06wqi_di" bpmnElement="Flow_0u06wqi">
         <di:waypoint x="940" y="345" />
         <di:waypoint x="940" y="260" />
@@ -237,9 +236,23 @@
         <di:waypoint x="940" y="395" />
         <di:waypoint x="940" y="442" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1hpyw1e_di" bpmnElement="Flow_1hpyw1e">
+        <di:waypoint x="732" y="260" />
+        <di:waypoint x="580" y="260" />
+        <di:waypoint x="580" y="342" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1ba6l9o_di" bpmnElement="Flow_1ba6l9o">
         <di:waypoint x="922" y="460" />
         <di:waypoint x="780" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ttjy87_di" bpmnElement="Flow_1ttjy87">
+        <di:waypoint x="680" y="460" />
+        <di:waypoint x="580" y="460" />
+        <di:waypoint x="580" y="378" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1xmpw9p_di" bpmnElement="Flow_1xmpw9p">
+        <di:waypoint x="1110" y="140" />
+        <di:waypoint x="1110" y="200" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1wd716l_di" bpmnElement="Flow_1wd716l">
         <di:waypoint x="1110" y="280" />
@@ -251,14 +264,14 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1tkryqx_di" bpmnElement="Flow_1tkryqx">
         <di:waypoint x="1110" y="395" />
-        <di:waypoint x="1110" y="590" />
-        <di:waypoint x="580" y="590" />
+        <di:waypoint x="1110" y="540" />
+        <di:waypoint x="580" y="540" />
         <di:waypoint x="580" y="378" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1h5s736_di" bpmnElement="Flow_1h5s736">
         <di:waypoint x="930" y="125" />
-        <di:waypoint x="930" y="220" />
-        <di:waypoint x="580" y="220" />
+        <di:waypoint x="930" y="190" />
+        <di:waypoint x="580" y="190" />
         <di:waypoint x="580" y="342" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1ypm9zc_di" bpmnElement="Flow_1ypm9zc">

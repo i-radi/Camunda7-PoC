@@ -41,25 +41,27 @@ public class WorkflowController : ControllerBase
 
     [Route("/create-instance")]
     [HttpGet]
-    public async Task<IActionResult> StartWorkflowInstance(string bpmProcessId, string groupId)
+    public async Task<IActionResult> StartWorkflowInstance(string bpmProcessId, int groupId)
     {
         var instance = await _zeebeService.CreateWorkflowInstance(bpmProcessId, groupId);
+
+        if (instance == null) return BadRequest("invalid groupid");
         return Ok(instance);
     }
 
     [Route("/approve-voucher")]
     [HttpGet]
-    public IActionResult ApproveVoucher(bool isApproved, string groupId)
+    public IActionResult ApproveVoucher(bool isApproved, string groupId, long processInstanceKey)
     {
-        _zeebeService.ApproveVoucher(isApproved, groupId);
+        _zeebeService.ApproveVoucher(isApproved, groupId, processInstanceKey);
         return Ok("done");
     }
 
     [Route("/voucher-paid")]
     [HttpGet]
-    public IActionResult VoucherPaid(string groupId)
+    public IActionResult VoucherPaid(string groupId, string processInstanceKey)
     {
-        _zeebeService.VoucherPaid(groupId);
+        _zeebeService.VoucherPaid(groupId, processInstanceKey);
         return Ok("done");
     }
 }

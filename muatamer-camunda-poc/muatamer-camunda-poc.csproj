@@ -8,6 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Bogus" Version="35.4.0" />
 		<PackageReference Include="Camunda.Api.Client" Version="2.6.0" />
 		<PackageReference Include="fastJSON" Version="2.4.0.4" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.26" />

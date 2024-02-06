@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Net.Http;
+using System.Text.Json;
 using System.Threading.Tasks;
 using fastJSON;
 using Microsoft.AspNetCore.Hosting;
@@ -35,6 +36,14 @@ public class ZeebeService : IZeebeService
         char[] port = { '4', '3', ':' };
         var audience = zeebeUrl?.TrimEnd(port);
 
+        // docker container 
+        //_client =
+        //    ZeebeClient.Builder()
+        //        .UseGatewayAddress("localhost:26500")
+        //        .UsePlainText()
+        //        .Build();
+
+        // cloud-
         _client =
             ZeebeClient.Builder()
                 .UseGatewayAddress(zeebeUrl)
@@ -77,7 +86,7 @@ public class ZeebeService : IZeebeService
         _createWorker("validate-group-not-empty", async (client, job) =>
         {
             _logger.LogInformation("Received job: " + job);
-            var groupIdString = JSON.ToObject<NotEmptyGroupDTO>(job.Variables).GroupId;
+            var groupIdString = JSON.ToObject<GroupDTO>(job.Variables).GroupId;
             int groupId = int.Parse(groupIdString);
 
             var group = _dbContext.UmrahGroups
@@ -87,9 +96,9 @@ public class ZeebeService : IZeebeService
             var isEmpty = true;
             if (group is not null && group.MuatamerInformations.Any()) isEmpty = false;
 
-
+            var notEmptyGroupDTO = new NotEmptyGroupDTO { isEmpty = isEmpty.ToString() };
             await client.NewCompleteJobCommand(job.Key)
-                .Variables("{\"isEmpty\": \"" + isEmpty + "\"}")
+                .Variables(JsonSerializer.Serialize(notEmptyGroupDTO))
                 .Send();
 
             _logger.LogInformation("Get NotEmptyGroup worker completed");
@@ -102,7 +111,7 @@ public class ZeebeService : IZeebeService
         {
             _logger.LogInformation("Received job: " + job);
 
-            var groupIdString = JSON.ToObject<NotEmptyGroupDTO>(job.Variables).GroupId;
+            var groupIdString = JSON.ToObject<GroupDTO>(job.Variables).GroupId;
             int groupId = int.Parse(groupIdString);
 
             var group = _dbContext.UmrahGroups
@@ -112,9 +121,9 @@ public class ZeebeService : IZeebeService
             var MuatamerCount = 0;
             if (group is not null && group.MuatamerInformations.Any()) MuatamerCount = group.MuatamerInformations.Count;
 
-
+            var groupNotGreaterThan100DTO = new GroupNotGreaterThan100DTO { MuatamerCount= MuatamerCount };
             await client.NewCompleteJobCommand(job.Key)
-                .Variables("{\"MuatamerCount\": " + MuatamerCount + "}")
+                .Variables(JsonSerializer.Serialize(groupNotGreaterThan100DTO))
                 .Send();
             _logger.LogInformation("Get GroupNotGreaterThan100 worker completed");
         });
@@ -124,30 +133,24 @@ public class ZeebeService : IZeebeService
     {
         _createWorker("validate-group-has-same-nationality", async (client, job) =>
         {
-            var groupIdString = JSON.ToObject<NotEmptyGroupDTO>(job.Variables).GroupId;
+            var groupIdString = JSON.ToObject<GroupDTO>(job.Variables).GroupId;
             int groupId = int.Parse(groupIdString);
 
             var group = _dbContext.UmrahGroups
             .Include(g => g.MuatamerInformations)
             .FirstOrDefault(g => g.Id == groupId);
 
-            var isSameNationality = true;
-            if (group is not null 
-            && group.MuatamerInformations.Any())
+            var isSameCountry = false;
+
+            if (group?.MuatamerInformations.Any() == true)
             {
-                var nationalityId = group.MuatamerInformations.FirstOrDefault().NationalityId;
-                foreach ( var Muatamer in group.MuatamerInformations)
-                {
-                    if (Muatamer.NationalityId != nationalityId)
-                    {
-                        isSameNationality = false;
-                    }
-                }
+                var firstCountryName = group.MuatamerInformations.FirstOrDefault()?.CountryName;
+                isSameCountry = group.MuatamerInformations.All(m => m.CountryName == firstCountryName);
             }
 
-
+            var groupHasSameNationalityDTO = new GroupHasSameNationalityDTO { isSameNationality = isSameCountry.ToString() };
             await client.NewCompleteJobCommand(job.Key)
-                .Variables("{\"isSameNationality\": \"" + isSameNationality + "\"}")
+                .Variables(JsonSerializer.Serialize(groupHasSameNationalityDTO))
                 .Send();
             _logger.LogInformation("Get GroupHasSameNationality worker completed");
         });
@@ -179,34 +182,49 @@ public class ZeebeService : IZeebeService
         });
     }
 
-    public async Task<String> CreateWorkflowInstance(string bpmProcessId, string groupId)
+    public async Task<IProcessInstanceResponse> CreateWorkflowInstance(string bpmProcessId, int groupId)
     {
         _logger.LogInformation("Creating workflow instance...");
+
+        if (!IsGroupExist(groupId))
+        {
+            return null;
+        }
+        var groupDto = new GroupDTO { GroupId = groupId.ToString() };
         var instance = await _client.NewCreateProcessInstanceCommand()
-             .BpmnProcessId(bpmProcessId)
+            .BpmnProcessId(bpmProcessId)
             .LatestVersion()
-            .Variables("{\"groupId\": \"" + groupId + "\"}")
-            .WithResult()
-            .Send();
-        var jsonParams = new JSONParameters { ShowReadOnlyProperties = true };
-        return JSON.ToJSON(instance, jsonParams);
+            .Variables(JsonSerializer.Serialize(groupDto))
+            .SendWithRetry(TimeSpan.FromSeconds(30));
+
+        return instance;
     }
 
-    public void ApproveVoucher(bool isApproved, string groupId)
+    public void ApproveVoucher(bool isApproved, string groupId, long processInstanceKey)
     {
+
+        var approveVoucherDTO = new ApproveVoucherDTO
+        {
+            isApproved = isApproved.ToString(),
+            processInstanceKey = processInstanceKey.ToString(),
+            Voucher_Paid = "Voucher_Paid"
+        };
 
         _createWorker("io.camunda.zeebe:userTask", async (client, job) =>
         {
-            var groupIdvariable = JSON.ToObject<NotEmptyGroupDTO>(job.Variables).GroupId;
-
-            if (groupId == groupIdvariable)
+            if (job.ProcessInstanceKey == processInstanceKey)
             {
-                await client.NewCompleteJobCommand(job.Key)
-                .Variables("{\"isApproved\": \"" + isApproved + "\" , \"Voucher_Paid\": \"Voucher_Paid\"}")
-                .Send();
+                var groupIdvariable = JSON.ToObject<GroupDTO>(job.Variables).GroupId;
+
+                if (groupId == groupIdvariable)
+                {
+                    await client.NewCompleteJobCommand(job.Key)
+                    .Variables(JsonSerializer.Serialize(approveVoucherDTO))
+                    .Send();
+                }
+                _logger.LogInformation("Get GroupHasSameNationality worker completed");
             }
 
-            _logger.LogInformation("Get GroupHasSameNationality worker completed");
         }, "ApproveVoucher");
     }
 
@@ -224,15 +242,21 @@ public class ZeebeService : IZeebeService
                 .Open();
     }
 
-    public async Task<string> VoucherPaid(string groupId)
+    public async Task<string> VoucherPaid(string groupId, string processInstanceKey)
     {
+        var voucherPaidDTO = new VoucherPaidDTO { Voucher_Paid = "Voucher_Paid" };
         var result = await _client.NewPublishMessageCommand()
                 .MessageName("Voucher_Paid")
-                .CorrelationKey("Voucher_Paid")
-                .Variables("{\"Voucher_Paid\": \"Voucher_Paid\"}")
+                .CorrelationKey(processInstanceKey)
+                .Variables(JsonSerializer.Serialize(voucherPaidDTO))
                 .Send();
 
         var jsonParams = new JSONParameters { ShowReadOnlyProperties = true };
         return JSON.ToJSON(result, jsonParams);
+    }
+
+    private bool IsGroupExist(int groupId)
+    {
+        return _dbContext.UmrahGroups.Any(g => g.Id == groupId);
     }
 }
