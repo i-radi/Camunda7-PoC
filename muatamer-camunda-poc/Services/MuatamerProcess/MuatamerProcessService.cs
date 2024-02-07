@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using fastJSON;
+using Google.Protobuf.WellKnownTypes;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -15,16 +16,16 @@ using Zeebe.Client.Api.Responses;
 using Zeebe.Client.Api.Worker;
 using Zeebe.Client.Impl.Builder;
 
-namespace muatamer_camunda_poc.Services;
+namespace muatamer_camunda_poc.Services.MuatamerProcess;
 
-public class ZeebeService : IZeebeService
+public class MuatamerProcessService : IMuatamerProcessService
 {
     private readonly IZeebeClient _client;
-    private readonly ILogger<ZeebeService> _logger;
+    private readonly ILogger<MuatamerProcessService> _logger;
     private readonly IWebHostEnvironment _env;
     private readonly ApplicationDbContext _dbContext;
 
-    public ZeebeService(IConfiguration config, ILogger<ZeebeService> logger, IWebHostEnvironment env, ApplicationDbContext dbContext)
+    public MuatamerProcessService(IConfiguration config, ILogger<MuatamerProcessService> logger, IWebHostEnvironment env, ApplicationDbContext dbContext)
     {
         _logger = logger;
         _env = env;
@@ -86,22 +87,33 @@ public class ZeebeService : IZeebeService
         _createWorker("validate-group-not-empty", async (client, job) =>
         {
             _logger.LogInformation("Received job: " + job);
-            var groupIdVariable = JSON.ToObject<GroupDTO>(job.Variables).GroupId;
+            var groupIdVariable = JSON.ToObject<GroupIdDTO>(job.Variables).GroupId;
             int groupId = groupIdVariable;
+            try
+            {
+                var group = _dbContext.UmrahGroups
+                                .Include(g => g.MuatamerInformations)
+                                .FirstOrDefault(g => g.Id == groupId);
+                
+                var isEmpty = true;
+                if (group is not null && group.MuatamerInformations.Any()) isEmpty = false;
 
-            var group = _dbContext.UmrahGroups
-            .Include(g => g.MuatamerInformations)
-            .FirstOrDefault(g => g.Id == groupId);
-
-            var isEmpty = true;
-            if (group is not null && group.MuatamerInformations.Any()) isEmpty = false;
-
-            var notEmptyGroupDTO = new NotEmptyGroupDTO { isEmpty = isEmpty };
-            await client.NewCompleteJobCommand(job.Key)
-                .Variables(JsonSerializer.Serialize(notEmptyGroupDTO))
-                .Send();
-
-            _logger.LogInformation("Get NotEmptyGroup worker completed");
+                var notEmptyGroupDTO = new NotEmptyGroupDTO { isEmpty = isEmpty };
+                await client.NewCompleteJobCommand(job.Key)
+                        .Variables(JsonSerializer.Serialize(notEmptyGroupDTO))
+                        .Send();
+            }
+            catch (Exception)
+            {
+                await client.NewCompleteJobCommand(job.Key)
+                        .Variables(JsonSerializer.Serialize(new NotEmptyGroupDTO { isEmpty = true }))
+                        .Send();
+            }
+            finally 
+            {
+                _logger.LogInformation("Get NotEmptyGroup worker completed");
+            }
+            
         });
     }
 
@@ -111,7 +123,7 @@ public class ZeebeService : IZeebeService
         {
             _logger.LogInformation("Received job: " + job);
 
-            var groupIdString = JSON.ToObject<GroupDTO>(job.Variables).GroupId;
+            var groupIdString = JSON.ToObject<GroupIdDTO>(job.Variables).GroupId;
             int groupId = groupIdString;
 
             var group = _dbContext.UmrahGroups
@@ -121,7 +133,7 @@ public class ZeebeService : IZeebeService
             var MuatamerCount = 0;
             if (group is not null && group.MuatamerInformations.Any()) MuatamerCount = group.MuatamerInformations.Count;
 
-            var groupNotGreaterThan100DTO = new GroupNotGreaterThan100DTO { MuatamerCount= MuatamerCount };
+            var groupNotGreaterThan100DTO = new GroupNotGreaterThan100DTO { MuatamerCount = MuatamerCount };
             await client.NewCompleteJobCommand(job.Key)
                 .Variables(JsonSerializer.Serialize(groupNotGreaterThan100DTO))
                 .Send();
@@ -133,7 +145,7 @@ public class ZeebeService : IZeebeService
     {
         _createWorker("validate-group-has-same-nationality", async (client, job) =>
         {
-            var groupIdString = JSON.ToObject<GroupDTO>(job.Variables).GroupId;
+            var groupIdString = JSON.ToObject<GroupIdDTO>(job.Variables).GroupId;
             int groupId = groupIdString;
 
             var group = _dbContext.UmrahGroups
@@ -148,7 +160,7 @@ public class ZeebeService : IZeebeService
                 isSameCountry = group.MuatamerInformations.All(m => m.CountryName == firstCountryName);
             }
 
-            var groupHasSameNationalityDTO = new GroupHasSameNationalityDTO { isSameNationality = isSameCountry};
+            var groupHasSameNationalityDTO = new GroupHasSameNationalityDTO { isSameNationality = isSameCountry };
             await client.NewCompleteJobCommand(job.Key)
                 .Variables(JsonSerializer.Serialize(groupHasSameNationalityDTO))
                 .Send();
@@ -190,7 +202,7 @@ public class ZeebeService : IZeebeService
         {
             return null;
         }
-        var groupDto = new GroupDTO { GroupId = groupId };
+        var groupDto = new GroupIdDTO { GroupId = groupId };
         var instance = await _client.NewCreateProcessInstanceCommand()
             .BpmnProcessId(bpmProcessId)
             .LatestVersion()
@@ -200,21 +212,22 @@ public class ZeebeService : IZeebeService
         return instance;
     }
 
-    public void ApproveVoucher(bool isApproved, int groupId, long processInstanceKey)
+    public void ApproveVoucher(bool isApproved, int groupId, long processInstanceKey, string timer)
     {
 
         var approveVoucherDTO = new ApproveVoucherDTO
         {
             isApproved = isApproved,
             processInstanceKey = processInstanceKey.ToString(),
-            Voucher_Paid = "Voucher_Paid"
+            Voucher_Paid = "Voucher_Paid",
+            remainingTime = $"PT{timer}S"
         };
 
         _createWorker("io.camunda.zeebe:userTask", async (client, job) =>
         {
             if (job.ProcessInstanceKey == processInstanceKey)
             {
-                var groupIdvariable = JSON.ToObject<GroupDTO>(job.Variables).GroupId;
+                var groupIdvariable = JSON.ToObject<GroupIdDTO>(job.Variables).GroupId;
 
                 if (groupId == groupIdvariable)
                 {
@@ -225,7 +238,7 @@ public class ZeebeService : IZeebeService
                 _logger.LogInformation("Get GroupHasSameNationality worker completed");
             }
 
-        }, "ApproveVoucher");
+        }, "Approve-Voucher");
     }
 
     private void _createWorker(string jobType, JobHandler handleJob, string name = null)
@@ -235,7 +248,7 @@ public class ZeebeService : IZeebeService
                 .JobType(jobType)
                 .Handler(handleJob)
                 .MaxJobsActive(5)
-                .Name(jobType)
+                .Name(name)
                 .PollInterval(TimeSpan.FromSeconds(50))
                 .PollingTimeout(TimeSpan.FromSeconds(50))
                 .Timeout(TimeSpan.FromSeconds(10))
