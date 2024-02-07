@@ -86,8 +86,8 @@ public class ZeebeService : IZeebeService
         _createWorker("validate-group-not-empty", async (client, job) =>
         {
             _logger.LogInformation("Received job: " + job);
-            var groupIdString = JSON.ToObject<GroupDTO>(job.Variables).GroupId;
-            int groupId = int.Parse(groupIdString);
+            var groupIdVariable = JSON.ToObject<GroupDTO>(job.Variables).GroupId;
+            int groupId = groupIdVariable;
 
             var group = _dbContext.UmrahGroups
             .Include(g => g.MuatamerInformations)
@@ -96,7 +96,7 @@ public class ZeebeService : IZeebeService
             var isEmpty = true;
             if (group is not null && group.MuatamerInformations.Any()) isEmpty = false;
 
-            var notEmptyGroupDTO = new NotEmptyGroupDTO { isEmpty = isEmpty.ToString() };
+            var notEmptyGroupDTO = new NotEmptyGroupDTO { isEmpty = isEmpty };
             await client.NewCompleteJobCommand(job.Key)
                 .Variables(JsonSerializer.Serialize(notEmptyGroupDTO))
                 .Send();
@@ -112,7 +112,7 @@ public class ZeebeService : IZeebeService
             _logger.LogInformation("Received job: " + job);
 
             var groupIdString = JSON.ToObject<GroupDTO>(job.Variables).GroupId;
-            int groupId = int.Parse(groupIdString);
+            int groupId = groupIdString;
 
             var group = _dbContext.UmrahGroups
             .Include(g => g.MuatamerInformations)
@@ -134,7 +134,7 @@ public class ZeebeService : IZeebeService
         _createWorker("validate-group-has-same-nationality", async (client, job) =>
         {
             var groupIdString = JSON.ToObject<GroupDTO>(job.Variables).GroupId;
-            int groupId = int.Parse(groupIdString);
+            int groupId = groupIdString;
 
             var group = _dbContext.UmrahGroups
             .Include(g => g.MuatamerInformations)
@@ -148,7 +148,7 @@ public class ZeebeService : IZeebeService
                 isSameCountry = group.MuatamerInformations.All(m => m.CountryName == firstCountryName);
             }
 
-            var groupHasSameNationalityDTO = new GroupHasSameNationalityDTO { isSameNationality = isSameCountry.ToString() };
+            var groupHasSameNationalityDTO = new GroupHasSameNationalityDTO { isSameNationality = isSameCountry};
             await client.NewCompleteJobCommand(job.Key)
                 .Variables(JsonSerializer.Serialize(groupHasSameNationalityDTO))
                 .Send();
@@ -190,7 +190,7 @@ public class ZeebeService : IZeebeService
         {
             return null;
         }
-        var groupDto = new GroupDTO { GroupId = groupId.ToString() };
+        var groupDto = new GroupDTO { GroupId = groupId };
         var instance = await _client.NewCreateProcessInstanceCommand()
             .BpmnProcessId(bpmProcessId)
             .LatestVersion()
@@ -200,12 +200,12 @@ public class ZeebeService : IZeebeService
         return instance;
     }
 
-    public void ApproveVoucher(bool isApproved, string groupId, long processInstanceKey)
+    public void ApproveVoucher(bool isApproved, int groupId, long processInstanceKey)
     {
 
         var approveVoucherDTO = new ApproveVoucherDTO
         {
-            isApproved = isApproved.ToString(),
+            isApproved = isApproved,
             processInstanceKey = processInstanceKey.ToString(),
             Voucher_Paid = "Voucher_Paid"
         };
@@ -242,7 +242,7 @@ public class ZeebeService : IZeebeService
                 .Open();
     }
 
-    public async Task<string> VoucherPaid(string groupId, string processInstanceKey)
+    public async Task<string> VoucherPaid(int groupId, string processInstanceKey)
     {
         var voucherPaidDTO = new VoucherPaidDTO { Voucher_Paid = "Voucher_Paid" };
         var result = await _client.NewPublishMessageCommand()

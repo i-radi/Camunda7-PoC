@@ -51,7 +51,7 @@ public class WorkflowController : ControllerBase
 
     [Route("/approve-voucher")]
     [HttpGet]
-    public IActionResult ApproveVoucher(bool isApproved, string groupId, long processInstanceKey)
+    public IActionResult ApproveVoucher(bool isApproved, int groupId, long processInstanceKey)
     {
         _zeebeService.ApproveVoucher(isApproved, groupId, processInstanceKey);
         return Ok("done");
@@ -59,7 +59,7 @@ public class WorkflowController : ControllerBase
 
     [Route("/voucher-paid")]
     [HttpGet]
-    public IActionResult VoucherPaid(string groupId, string processInstanceKey)
+    public IActionResult VoucherPaid(int groupId, string processInstanceKey)
     {
         _zeebeService.VoucherPaid(groupId, processInstanceKey);
         return Ok("done");

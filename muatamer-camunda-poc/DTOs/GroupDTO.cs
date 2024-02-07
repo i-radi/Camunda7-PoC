@@ -2,5 +2,5 @@
 
 public class GroupDTO
 {
-    public string GroupId { get; set;}
+    public int GroupId { get; set;}
 }

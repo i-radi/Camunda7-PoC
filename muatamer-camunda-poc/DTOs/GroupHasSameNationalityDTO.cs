@@ -2,5 +2,5 @@
 
 public class GroupHasSameNationalityDTO
 {
-    public string isSameNationality { get; set; }
+    public bool isSameNationality { get; set; }
 }
