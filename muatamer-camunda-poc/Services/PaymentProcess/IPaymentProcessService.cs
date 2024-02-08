@@ -4,8 +4,8 @@ namespace muatamer_camunda_poc.Services.PaymentProcess;
 
 public interface IPaymentProcessService
 {
-    public Task<ITopology> Status();
-    public Task<IDeployResourceResponse> Deploy(string modelFile);
     public void StartWorkers();
-    public Task<IProcessInstanceResponse> CreateWorkflowInstance(string bpmProcessId, int groupId);
+    public Task<IProcessInstanceResponse> CreateProcessInstance(int RequestId);
+    Task<string> ManualApprovalMessage(string processInstanceKey);
+    Task<string> ManualPaymentMessage(string processInstanceKey);
 }

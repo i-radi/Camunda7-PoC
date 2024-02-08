@@ -1,9 +1,8 @@
 ﻿using Bogus;
 using Microsoft.EntityFrameworkCore;
-using muatamer_camunda_poc.Context;
 using muatamer_camunda_poc.Models;
 
-namespace muatamer_camunda_poc.Init;
+namespace muatamer_camunda_poc.Context;
 
 public class DbSeed
 {

@@ -15,28 +15,11 @@ public class MuatamerWorkflowController : ControllerBase
         _zeebeService = zeebeService;
     }
 
-    [Route("status")]
-    [HttpGet]
-    public async Task<IActionResult> Get()
-    {
-        var result = (await _zeebeService.Status()).ToString();
-        return Ok(result);
-    }
-
-    [Route("deploy")]
-    [HttpGet]
-    public async Task<IActionResult> DeployWorkflow()
-    {
-        var response = await _zeebeService.Deploy("muatamer-process.bpmn");
-        _zeebeService.StartWorkers();
-        return Ok(response);
-    }
-
     [Route("create-instance")]
     [HttpGet]
-    public async Task<IActionResult> StartWorkflowInstance(string processId, int groupId)
+    public async Task<IActionResult> StartWorkflowInstance(int groupId)
     {
-        var instance = await _zeebeService.CreateWorkflowInstance(processId, groupId);
+        var instance = await _zeebeService.CreateWorkflowInstance(groupId);
 
         if (instance == null) return BadRequest("invalid groupid");
         return Ok(instance);

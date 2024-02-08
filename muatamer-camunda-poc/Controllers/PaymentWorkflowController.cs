@@ -15,30 +15,31 @@ public class PaymentWorkflowController : ControllerBase
         _zeebeService = zeebeService;
     }
 
-    [Route("status")]
-    [HttpGet]
-    public async Task<IActionResult> Get()
-    {
-        var result = (await _zeebeService.Status()).ToString();
-        return Ok(result);
-    }
-
-    [Route("deploy")]
-    [HttpGet]
-    public async Task<IActionResult> DeployWorkflow()
-    {
-        var response = await _zeebeService.Deploy("payment-process.bpmn");
-        _zeebeService.StartWorkers();
-        return Ok(response);
-    }
-
     [Route("create-instance")]
     [HttpGet]
-    public async Task<IActionResult> StartWorkflowInstance(string processId, int groupId)
+    public async Task<IActionResult> StartWorkflowInstance(int requestId)
     {
-        var instance = await _zeebeService.CreateWorkflowInstance(processId, groupId);
+        var instance = await _zeebeService.CreateProcessInstance(requestId);
 
         if (instance == null) return BadRequest("invalid groupid");
+        return Ok(instance);
+    }
+
+    [Route("manual-approve")]
+    [HttpGet]
+    public async Task<IActionResult> ManualApproval(string processId)
+    {
+        var instance = await _zeebeService.ManualApprovalMessage(processId);
+
+        return Ok(instance);
+    }
+
+    [Route("manual-payment")]
+    [HttpGet]
+    public async Task<IActionResult> ManualPayment(string processId)
+    {
+        var instance = await _zeebeService.ManualPaymentMessage(processId);
+
         return Ok(instance);
     }
 }

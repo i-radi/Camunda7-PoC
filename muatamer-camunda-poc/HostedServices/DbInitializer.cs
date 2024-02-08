@@ -1,10 +1,6 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using muatamer_camunda_poc.Context;
 
-namespace muatamer_camunda_poc.Init
+namespace muatamer_camunda_poc.HostedServices
 {
     public class DbInitializer : IHostedService
     {

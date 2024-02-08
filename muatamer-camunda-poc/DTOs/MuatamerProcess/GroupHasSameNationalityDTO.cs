@@ -1,4 +1,4 @@
-﻿namespace muatamer_camunda_poc.DTOs;
+﻿namespace muatamer_camunda_poc.DTOs.MuatamerProcess;
 
 public class GroupHasSameNationalityDTO
 {

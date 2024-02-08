@@ -1,6 +1,6 @@
-using Microsoft.Extensions.DependencyInjection;
+using muatamer_camunda_poc.HostedServices;
 
-namespace muatamer_camunda_poc.Init
+namespace muatamer_camunda_poc.Context
 {
     public static class DbInitializerInstaller
     {

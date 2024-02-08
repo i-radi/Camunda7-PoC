@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using muatamer_camunda_poc.Context;
-using muatamer_camunda_poc.Init;
+using muatamer_camunda_poc.HostedServices;
+using muatamer_camunda_poc.Services.GenericWorkflow;
 using muatamer_camunda_poc.Services.MuatamerProcess;
 using muatamer_camunda_poc.Services.PaymentProcess;
 
@@ -9,11 +10,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionStrings:dbconnection"]);
-},ServiceLifetime.Singleton);
+}, ServiceLifetime.Singleton);
 builder.Services.AddDbInitializer();
 
+builder.Services.AddSingleton<IWorkflowService, WorkflowService>();
 builder.Services.AddSingleton<IMuatamerProcessService, MuatamerProcessService>();
 builder.Services.AddSingleton<IPaymentProcessService, PaymentProcessService>();
+
+builder.Services.AddHostedService<DeployWorkflows>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -32,7 +36,5 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
-
-
 
 app.Run();

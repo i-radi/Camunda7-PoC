@@ -1,68 +1,48 @@
-﻿using fastJSON;
+﻿using Microsoft.EntityFrameworkCore;
+using muatamer_camunda_poc.Constants;
 using muatamer_camunda_poc.Context;
-using muatamer_camunda_poc.DTOs;
-using muatamer_camunda_poc.Services.MuatamerProcess;
-using Zeebe.Client.Api.Responses;
-using Zeebe.Client.Api.Worker;
-using Zeebe.Client.Impl.Builder;
-using Zeebe.Client;
+using muatamer_camunda_poc.DTOs.PaymentProcess;
+using muatamer_camunda_poc.Enum;
+using muatamer_camunda_poc.Enum.PaymentProcess;
+using muatamer_camunda_poc.Extentions;
+using muatamer_camunda_poc.Services.GenericWorkflow;
 using System.Text.Json;
+using Zeebe.Client.Api.Responses;
 
 namespace muatamer_camunda_poc.Services.PaymentProcess;
 
-public class PaymentProcessService : IPaymentProcessService
+public class PaymentProcessService : WorkflowService, IPaymentProcessService
 {
-    private readonly IZeebeClient _client;
-    private readonly ILogger<PaymentProcessService> _logger;
-    private readonly IWebHostEnvironment _env;
+    private readonly ILogger<WorkflowService> _logger;
     private readonly ApplicationDbContext _dbContext;
 
-    public PaymentProcessService(IConfiguration config, ILogger<PaymentProcessService> logger, IWebHostEnvironment env, ApplicationDbContext dbContext)
+    public PaymentProcessService(IConfiguration config, ILogger<WorkflowService> logger, ApplicationDbContext dbContext, IWebHostEnvironment env) : base(config, logger, env)
     {
         _logger = logger;
-        _env = env;
         _dbContext = dbContext;
-        var authServer = config["ZeebeClientCloudSettings:OAuthURL"];
-        var clientId = config["ZeebeClientCloudSettings:ClientId"];
-        var clientSecret = config["ZeebeClientCloudSettings:ClientSecret"];
-        var zeebeUrl = config["ZeebeClientCloudSettings:ClusterURL"];
-        char[] port = { '4', '3', ':' };
-        var audience = zeebeUrl?.TrimEnd(port);
-
-        // docker container 
-        //_client =
-        //    ZeebeClient.Builder()
-        //        .UseGatewayAddress("localhost:26500")
-        //        .UsePlainText()
-        //        .Build();
-
-        // cloud-
-        _client =
-            ZeebeClient.Builder()
-                .UseGatewayAddress(zeebeUrl)
-                .UseTransportEncryption()
-                .UseAccessTokenSupplier(
-                    CamundaCloudTokenProvider.Builder()
-                        .UseAuthServer(authServer)
-                        .UseClientId(clientId)
-                        .UseClientSecret(clientSecret)
-                        .UseAudience(audience)
-                        .Build())
-                .Build();
     }
 
-    public Task<ITopology> Status()
+    public async Task<IProcessInstanceResponse> CreateProcessInstance(int requestId)
     {
-        return _client.TopologyRequest().Send();
-    }
+        _logger.LogInformation("Creating workflow instance...");
 
-    public async Task<IDeployResourceResponse> Deploy(string modelFile)
-    {
-        var filename = Path.Combine(_env.ContentRootPath, "Resources", modelFile);
-        var deployment = await _client.NewDeployCommand().AddResourceFile(filename).Send();
-        var res = deployment.Processes[0];
-        _logger.LogInformation("Deployed BPMN Model: " + res?.BpmnProcessId + " v." + res?.Version);
-        return deployment;
+        var paymnetDto = new PaymentProcessDto
+        {
+            GroupId = requestId,
+            BLValidationResult = 99,
+            CreateVoucherResult = 99,
+            IsFullPaymentResult = 99,
+            MinistryApprovalResult = 99,
+            PaymentSystemResult = 99
+        };
+
+        var instance = await ZeebeClient.NewCreateProcessInstanceCommand()
+            .BpmnProcessId(BpmProcessId.PaymentBpmProcessId)
+            .LatestVersion()
+            .Variables(JsonSerializer.Serialize(paymnetDto))
+            .SendWithRetry(TimeSpan.FromSeconds(30));
+
+        return instance;
     }
 
     public void StartWorkers()
@@ -74,51 +54,40 @@ public class PaymentProcessService : IPaymentProcessService
         CancelRequestWorker();
     }
 
-    public async Task<IProcessInstanceResponse> CreateWorkflowInstance(string bpmProcessId, int groupId)
+    private void BLValidationWorker()
     {
-        _logger.LogInformation("Creating workflow instance...");
-
-        var paymnetDto = new PaymentProcessDto
-        {
-            GroupId = groupId,
-            BLValidationResult = 99,
-            CreateVoucherResult = 99,
-            IsFullPaymentResult = 99,
-            MinistryApprovalResult = 99,
-            PaymentSystemResult = 99
-        };
-
-        var instance = await _client.NewCreateProcessInstanceCommand()
-            .BpmnProcessId(bpmProcessId)
-            .LatestVersion()
-            .Variables(JsonSerializer.Serialize(paymnetDto))
-            .SendWithRetry(TimeSpan.FromSeconds(30));
-
-        return instance;
-    }
-
-    public void BLValidationWorker()
-    {
-        _createWorker("BLValidationDef", async (client, job) =>
+        ZeebeClient.CreateWorker("BLValidationDef", async (jobClient, job) =>
         {
             _logger.LogInformation("BL validation worker received job: " + job);
 
-            var paymentProcessDto = JsonSerializer.Deserialize< PaymentProcessDto>(job.Variables);
+            var paymentProcessDto = JsonSerializer.Deserialize<PaymentProcessDto>(job.Variables);
+            paymentProcessDto.processInsanceId = job.ProcessInstanceKey.ToString();
 
-            // logic
-            paymentProcessDto!.BLValidationResult = 0;
+            var group = _dbContext.UmrahGroups
+                                .Include(g => g.MuatamerInformations)
+                                .FirstOrDefault(g => g.Id == paymentProcessDto.GroupId);
 
-            await client.NewCompleteJobCommand(job.Key)
-                .Variables(JsonSerializer.Serialize(paymentProcessDto))
-                .Send();
+            paymentProcessDto!.BLValidationResult = 1;
+            paymentProcessDto!.IsManualNationality = false;
+
+            if (group is not null && group.MuatamerInformations.Any())
+            {
+                paymentProcessDto!.BLValidationResult = 0;
+            }
+            if (group.Country == "Egypt")
+            {
+                paymentProcessDto.IsManualNationality = true;
+            }
+
+            await jobClient.ComplateTaskAsync(job.Key, paymentProcessDto);
 
             _logger.LogInformation("BL validation worker completed");
         });
     }
 
-    public void MinistryApprovalWorker()
+    private void MinistryApprovalWorker()
     {
-        _createWorker("MinistryApprovalDef", async (client, job) =>
+        ZeebeClient.CreateWorker(nameof(PaymentProcessWorker.MinistryApprovalDef), async (jobClient, job) =>
         {
             _logger.LogInformation("Ministry Approval worker received job: " + job);
 
@@ -127,36 +96,33 @@ public class PaymentProcessService : IPaymentProcessService
             // logic
             paymentProcessDto!.MinistryApprovalResult = 0;
 
-            await client.NewCompleteJobCommand(job.Key)
-                .Variables(JsonSerializer.Serialize(paymentProcessDto))
-                .Send();
+            await jobClient.ComplateTaskAsync(job.Key, paymentProcessDto);
 
             _logger.LogInformation("Ministry Approval worker completed");
         });
     }
 
-    public void CreateVoucherWorker()
+    private void CreateVoucherWorker()
     {
-        _createWorker("CreateVoucherDef", async (client, job) =>
+        ZeebeClient.CreateWorker(nameof(PaymentProcessWorker.CreateVoucherDef), async (jobClient, job) =>
         {
             _logger.LogInformation("Create Voucher worker received job: " + job);
 
             var paymentProcessDto = JsonSerializer.Deserialize<PaymentProcessDto>(job.Variables);
+            paymentProcessDto!.isManualPayment = true;
 
             // logic
             paymentProcessDto!.CreateVoucherResult = 0;
 
-            await client.NewCompleteJobCommand(job.Key)
-                .Variables(JsonSerializer.Serialize(paymentProcessDto))
-                .Send();
+            await jobClient.ComplateTaskAsync(job.Key, paymentProcessDto);
 
             _logger.LogInformation("Create Voucher worker completed");
         });
     }
 
-    public void PaymentSystemWorker()
+    private void PaymentSystemWorker()
     {
-        _createWorker("PaymentSystemDef", async (client, job) =>
+        ZeebeClient.CreateWorker(nameof(PaymentProcessWorker.PaymentSystemDef), async (jobClient, job) =>
         {
             _logger.LogInformation("Payment System worker received job: " + job);
 
@@ -166,17 +132,15 @@ public class PaymentProcessService : IPaymentProcessService
             paymentProcessDto!.PaymentSystemResult = 1;
             paymentProcessDto!.IsFullPaymentResult = 1;
 
-            await client.NewCompleteJobCommand(job.Key)
-                .Variables(JsonSerializer.Serialize(paymentProcessDto))
-                .Send();
+            await jobClient.ComplateTaskAsync(job.Key, paymentProcessDto);
 
             _logger.LogInformation("Payment System worker completed");
         });
     }
 
-    public void CancelRequestWorker()
+    private void CancelRequestWorker()
     {
-        _createWorker("CancelRequestDef", async (client, job) =>
+        ZeebeClient.CreateWorker(nameof(PaymentProcessWorker.CancelRequestDef), async (jobClient, job) =>
         {
             _logger.LogInformation("Cancel Request worker received job: " + job);
 
@@ -184,25 +148,30 @@ public class PaymentProcessService : IPaymentProcessService
 
             // logic
 
-            await client.NewCompleteJobCommand(job.Key)
-                .Send();
+            await jobClient.ComplateTaskAsync(job.Key);
 
             _logger.LogInformation("Cancel Request worker completed");
         });
     }
 
-    private void _createWorker(string jobType, JobHandler handleJob, string name = null)
+    public async Task<string> ManualApprovalMessage(string processInstanceKey)
     {
-        name = name ?? jobType;
-        _client.NewWorker()
-                .JobType(jobType)
-                .Handler(handleJob)
-                .MaxJobsActive(5)
-                .Name(jobType)
-                .PollInterval(TimeSpan.FromSeconds(50))
-                .PollingTimeout(TimeSpan.FromSeconds(50))
-                .Timeout(TimeSpan.FromSeconds(10))
-                .Open();
+        var result = await ZeebeClient.PublishMessageAsync(
+            processInstanceKey,
+            nameof(PaymentProcessMessage.ManualApproval),
+            new { MinistryApprovalResult = 0 });
+
+        return JsonSerializer.Serialize(result);
     }
 
+    public async Task<string> ManualPaymentMessage(string processInstanceKey)
+    {
+
+        var result = await ZeebeClient.PublishMessageAsync(
+            processInstanceKey,
+            nameof(PaymentProcessMessage.ManualPayment),
+            new { PaymentSystemResult = 0, IsFullPaymentResult = 1 });
+
+        return JsonSerializer.Serialize(result);
+    }
 }
