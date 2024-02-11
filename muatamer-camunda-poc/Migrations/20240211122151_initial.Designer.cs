@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using muatamer_camunda_poc.Context;
 
@@ -11,9 +12,10 @@ using muatamer_camunda_poc.Context;
 namespace muatamer_camunda_poc.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240211122151_initial")]
+    partial class initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,6 +23,21 @@ namespace muatamer_camunda_poc.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
+
+            modelBuilder.Entity("ExternalAgentUmrahOperator", b =>
+                {
+                    b.Property<int>("ExternalAgentsId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UmrahOperatorsId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ExternalAgentsId", "UmrahOperatorsId");
+
+                    b.HasIndex("UmrahOperatorsId");
+
+                    b.ToTable("ExternalAgentUmrahOperator");
+                });
 
             modelBuilder.Entity("muatamer_camunda_poc.Models.Country", b =>
                 {
@@ -31,6 +48,7 @@ namespace muatamer_camunda_poc.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("State")
@@ -53,12 +71,15 @@ namespace muatamer_camunda_poc.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MobileNumber")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("State")
@@ -69,29 +90,6 @@ namespace muatamer_camunda_poc.Migrations
                     b.HasIndex("CountryId");
 
                     b.ToTable("ExternalAgents");
-                });
-
-            modelBuilder.Entity("muatamer_camunda_poc.Models.ExternalAgentUmrahOperator", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<int>("ExternalAgentId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UmrahOperatorId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExternalAgentId");
-
-                    b.HasIndex("UmrahOperatorId");
-
-                    b.ToTable("ExternalAgentUmrahOperators");
                 });
 
             modelBuilder.Entity("muatamer_camunda_poc.Models.IntersectionQuotaTracking", b =>
@@ -150,12 +148,14 @@ namespace muatamer_camunda_poc.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Gender")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("GroupId")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("NationalityId")
@@ -168,9 +168,11 @@ namespace muatamer_camunda_poc.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("PassportNumber")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PassportType")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -193,6 +195,7 @@ namespace muatamer_camunda_poc.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("State")
@@ -252,10 +255,8 @@ namespace muatamer_camunda_poc.Migrations
                     b.Property<int>("CountryId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ExternalAgentId")
-                        .HasColumnType("int");
-
                     b.Property<string>("FromCountry")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("HasVoucher")
@@ -265,13 +266,12 @@ namespace muatamer_camunda_poc.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Notes")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UmrahOperatorId")
-                        .HasColumnType("int");
 
                     b.Property<bool>("VisaIssued")
                         .HasColumnType("bit");
@@ -279,10 +279,6 @@ namespace muatamer_camunda_poc.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CountryId");
-
-                    b.HasIndex("ExternalAgentId");
-
-                    b.HasIndex("UmrahOperatorId");
 
                     b.ToTable("UmrahGroups");
                 });
@@ -296,12 +292,15 @@ namespace muatamer_camunda_poc.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MobileNumber")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("State")
@@ -310,6 +309,21 @@ namespace muatamer_camunda_poc.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UmrahOperators");
+                });
+
+            modelBuilder.Entity("ExternalAgentUmrahOperator", b =>
+                {
+                    b.HasOne("muatamer_camunda_poc.Models.ExternalAgent", null)
+                        .WithMany()
+                        .HasForeignKey("ExternalAgentsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("muatamer_camunda_poc.Models.UmrahOperator", null)
+                        .WithMany()
+                        .HasForeignKey("UmrahOperatorsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("muatamer_camunda_poc.Models.ExternalAgent", b =>
@@ -321,25 +335,6 @@ namespace muatamer_camunda_poc.Migrations
                         .IsRequired();
 
                     b.Navigation("Country");
-                });
-
-            modelBuilder.Entity("muatamer_camunda_poc.Models.ExternalAgentUmrahOperator", b =>
-                {
-                    b.HasOne("muatamer_camunda_poc.Models.ExternalAgent", "ExternalAgent")
-                        .WithMany("ExternalAgentUmrahOperators")
-                        .HasForeignKey("ExternalAgentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("muatamer_camunda_poc.Models.UmrahOperator", "UmrahOperator")
-                        .WithMany("ExternalAgentUmrahOperators")
-                        .HasForeignKey("UmrahOperatorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ExternalAgent");
-
-                    b.Navigation("UmrahOperator");
                 });
 
             modelBuilder.Entity("muatamer_camunda_poc.Models.MuatamerInformation", b =>
@@ -377,42 +372,12 @@ namespace muatamer_camunda_poc.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("muatamer_camunda_poc.Models.ExternalAgent", "ExternalAgent")
-                        .WithMany("UmrahGroups")
-                        .HasForeignKey("ExternalAgentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("muatamer_camunda_poc.Models.UmrahOperator", "UmrahOperator")
-                        .WithMany("UmrahGroups")
-                        .HasForeignKey("UmrahOperatorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Country");
-
-                    b.Navigation("ExternalAgent");
-
-                    b.Navigation("UmrahOperator");
-                });
-
-            modelBuilder.Entity("muatamer_camunda_poc.Models.ExternalAgent", b =>
-                {
-                    b.Navigation("ExternalAgentUmrahOperators");
-
-                    b.Navigation("UmrahGroups");
                 });
 
             modelBuilder.Entity("muatamer_camunda_poc.Models.UmrahGroup", b =>
                 {
                     b.Navigation("MuatamerInformations");
-                });
-
-            modelBuilder.Entity("muatamer_camunda_poc.Models.UmrahOperator", b =>
-                {
-                    b.Navigation("ExternalAgentUmrahOperators");
-
-                    b.Navigation("UmrahGroups");
                 });
 #pragma warning restore 612, 618
         }

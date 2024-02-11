@@ -4,27 +4,27 @@
 
 namespace muatamer_camunda_poc.Migrations
 {
-    public partial class addEaCountry : Migration
+    public partial class addEaGroupRelation : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
-                name: "CountryId",
-                table: "ExternalAgents",
+                name: "ExternalAgentId",
+                table: "UmrahGroups",
                 type: "int",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ExternalAgents_CountryId",
-                table: "ExternalAgents",
-                column: "CountryId");
+                name: "IX_UmrahGroups_ExternalAgentId",
+                table: "UmrahGroups",
+                column: "ExternalAgentId");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ExternalAgents_Countries_CountryId",
-                table: "ExternalAgents",
-                column: "CountryId",
-                principalTable: "Countries",
+                name: "FK_UmrahGroups_ExternalAgents_ExternalAgentId",
+                table: "UmrahGroups",
+                column: "ExternalAgentId",
+                principalTable: "ExternalAgents",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.NoAction);
         }
@@ -32,16 +32,16 @@ namespace muatamer_camunda_poc.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_ExternalAgents_Countries_CountryId",
-                table: "ExternalAgents");
+                name: "FK_UmrahGroups_ExternalAgents_ExternalAgentId",
+                table: "UmrahGroups");
 
             migrationBuilder.DropIndex(
-                name: "IX_ExternalAgents_CountryId",
-                table: "ExternalAgents");
+                name: "IX_UmrahGroups_ExternalAgentId",
+                table: "UmrahGroups");
 
             migrationBuilder.DropColumn(
-                name: "CountryId",
-                table: "ExternalAgents");
+                name: "ExternalAgentId",
+                table: "UmrahGroups");
         }
     }
 }

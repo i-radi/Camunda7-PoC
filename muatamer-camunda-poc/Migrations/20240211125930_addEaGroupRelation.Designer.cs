@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using muatamer_camunda_poc.Context;
 
@@ -11,9 +12,10 @@ using muatamer_camunda_poc.Context;
 namespace muatamer_camunda_poc.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240211125930_addEaGroupRelation")]
+    partial class addEaGroupRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -270,9 +272,6 @@ namespace muatamer_camunda_poc.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UmrahOperatorId")
-                        .HasColumnType("int");
-
                     b.Property<bool>("VisaIssued")
                         .HasColumnType("bit");
 
@@ -281,8 +280,6 @@ namespace muatamer_camunda_poc.Migrations
                     b.HasIndex("CountryId");
 
                     b.HasIndex("ExternalAgentId");
-
-                    b.HasIndex("UmrahOperatorId");
 
                     b.ToTable("UmrahGroups");
                 });
@@ -383,17 +380,9 @@ namespace muatamer_camunda_poc.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("muatamer_camunda_poc.Models.UmrahOperator", "UmrahOperator")
-                        .WithMany("UmrahGroups")
-                        .HasForeignKey("UmrahOperatorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Country");
 
                     b.Navigation("ExternalAgent");
-
-                    b.Navigation("UmrahOperator");
                 });
 
             modelBuilder.Entity("muatamer_camunda_poc.Models.ExternalAgent", b =>
@@ -411,8 +400,6 @@ namespace muatamer_camunda_poc.Migrations
             modelBuilder.Entity("muatamer_camunda_poc.Models.UmrahOperator", b =>
                 {
                     b.Navigation("ExternalAgentUmrahOperators");
-
-                    b.Navigation("UmrahGroups");
                 });
 #pragma warning restore 612, 618
         }

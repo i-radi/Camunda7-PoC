@@ -11,6 +11,8 @@ public class PaymentProcessDto
     public bool IsManualNationality { get; set; }
     public bool isManualPayment { get; set; }
     public string processInsanceId { get; set; }
+    public string Message { get; set; }
+    public int MuatamersCount { get; set; }
 }
 
 

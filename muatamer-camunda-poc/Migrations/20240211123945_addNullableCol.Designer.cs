@@ -12,8 +12,8 @@ using muatamer_camunda_poc.Context;
 namespace muatamer_camunda_poc.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240211103414_initial")]
-    partial class initial
+    [Migration("20240211123945_addNullableCol")]
+    partial class addNullableCol
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -24,21 +24,6 @@ namespace muatamer_camunda_poc.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("ExternalAgentUmrahOperator", b =>
-                {
-                    b.Property<int>("ExternalAgentsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UmrahOperatorsId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ExternalAgentsId", "UmrahOperatorsId");
-
-                    b.HasIndex("UmrahOperatorsId");
-
-                    b.ToTable("ExternalAgentUmrahOperator");
-                });
-
             modelBuilder.Entity("muatamer_camunda_poc.Models.Country", b =>
                 {
                     b.Property<int>("Id")
@@ -48,7 +33,6 @@ namespace muatamer_camunda_poc.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("State")
@@ -67,16 +51,16 @@ namespace muatamer_camunda_poc.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<int>("CountryId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MobileNumber")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("State")
@@ -84,7 +68,76 @@ namespace muatamer_camunda_poc.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CountryId");
+
                     b.ToTable("ExternalAgents");
+                });
+
+            modelBuilder.Entity("muatamer_camunda_poc.Models.ExternalAgentUmrahOperator", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("ExternalAgentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UmrahOperatorId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExternalAgentId");
+
+                    b.HasIndex("UmrahOperatorId");
+
+                    b.ToTable("ExternalAgentUmrahOperators");
+                });
+
+            modelBuilder.Entity("muatamer_camunda_poc.Models.IntersectionQuotaTracking", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Entity1Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Entity1Type")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Entity2Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Entity2Type")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PeriodType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Reserved")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Total")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Used")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("IntersectionQuotaTracking");
+
+                    b.HasCheckConstraint("CK_IntersectionQuotaTracking_Reserved", "Reserved <= Total - Used");
+
+                    b.HasCheckConstraint("CK_IntersectionQuotaTracking_Used", "Used <= Total");
                 });
 
             modelBuilder.Entity("muatamer_camunda_poc.Models.MuatamerInformation", b =>
@@ -99,14 +152,12 @@ namespace muatamer_camunda_poc.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Gender")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("GroupId")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("NationalityId")
@@ -119,11 +170,9 @@ namespace muatamer_camunda_poc.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("PassportNumber")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PassportType")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -146,7 +195,6 @@ namespace muatamer_camunda_poc.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("State")
@@ -157,7 +205,7 @@ namespace muatamer_camunda_poc.Migrations
                     b.ToTable("Nationalities");
                 });
 
-            modelBuilder.Entity("muatamer_camunda_poc.Models.PeriodicalQuotaTracking", b =>
+            modelBuilder.Entity("muatamer_camunda_poc.Models.StandaloneQuotaTracking", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -169,6 +217,9 @@ namespace muatamer_camunda_poc.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("EntityId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EntityType")
                         .HasColumnType("int");
 
                     b.Property<int>("PeriodType")
@@ -180,46 +231,16 @@ namespace muatamer_camunda_poc.Migrations
                     b.Property<int>("Total")
                         .HasColumnType("int");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
                     b.Property<int>("Used")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.ToTable("PeriodicalQuotaTracking");
-                });
+                    b.ToTable("StandaloneQuotaTracking");
 
-            modelBuilder.Entity("muatamer_camunda_poc.Models.TotalQuotaTracking", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.HasCheckConstraint("CK_StandaloneQuotaTracking_Reserved", "Reserved <= Total - Used");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EntityId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Reserved")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Total")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Used")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TotalQuotaTracking");
+                    b.HasCheckConstraint("CK_StandaloneQuotaTracking_Used", "Used <= Total");
                 });
 
             modelBuilder.Entity("muatamer_camunda_poc.Models.UmrahGroup", b =>
@@ -234,7 +255,6 @@ namespace muatamer_camunda_poc.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("FromCountry")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("HasVoucher")
@@ -244,11 +264,9 @@ namespace muatamer_camunda_poc.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Notes")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("VisaIssued")
@@ -270,15 +288,12 @@ namespace muatamer_camunda_poc.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MobileNumber")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("State")
@@ -289,19 +304,34 @@ namespace muatamer_camunda_poc.Migrations
                     b.ToTable("UmrahOperators");
                 });
 
-            modelBuilder.Entity("ExternalAgentUmrahOperator", b =>
+            modelBuilder.Entity("muatamer_camunda_poc.Models.ExternalAgent", b =>
                 {
-                    b.HasOne("muatamer_camunda_poc.Models.ExternalAgent", null)
+                    b.HasOne("muatamer_camunda_poc.Models.Country", "Country")
                         .WithMany()
-                        .HasForeignKey("ExternalAgentsId")
+                        .HasForeignKey("CountryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("muatamer_camunda_poc.Models.UmrahOperator", null)
-                        .WithMany()
-                        .HasForeignKey("UmrahOperatorsId")
+                    b.Navigation("Country");
+                });
+
+            modelBuilder.Entity("muatamer_camunda_poc.Models.ExternalAgentUmrahOperator", b =>
+                {
+                    b.HasOne("muatamer_camunda_poc.Models.ExternalAgent", "ExternalAgent")
+                        .WithMany("ExternalAgentUmrahOperators")
+                        .HasForeignKey("ExternalAgentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("muatamer_camunda_poc.Models.UmrahOperator", "UmrahOperator")
+                        .WithMany("ExternalAgentUmrahOperators")
+                        .HasForeignKey("UmrahOperatorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ExternalAgent");
+
+                    b.Navigation("UmrahOperator");
                 });
 
             modelBuilder.Entity("muatamer_camunda_poc.Models.MuatamerInformation", b =>
@@ -342,9 +372,19 @@ namespace muatamer_camunda_poc.Migrations
                     b.Navigation("Country");
                 });
 
+            modelBuilder.Entity("muatamer_camunda_poc.Models.ExternalAgent", b =>
+                {
+                    b.Navigation("ExternalAgentUmrahOperators");
+                });
+
             modelBuilder.Entity("muatamer_camunda_poc.Models.UmrahGroup", b =>
                 {
                     b.Navigation("MuatamerInformations");
+                });
+
+            modelBuilder.Entity("muatamer_camunda_poc.Models.UmrahOperator", b =>
+                {
+                    b.Navigation("ExternalAgentUmrahOperators");
                 });
 #pragma warning restore 612, 618
         }

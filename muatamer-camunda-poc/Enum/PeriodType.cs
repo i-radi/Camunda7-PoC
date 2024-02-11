@@ -2,5 +2,9 @@
 
 public enum PeriodType
 {
-    Monthly
+    Daily,
+    Weekly,
+    Monthly,
+    Quarterly,
+    Annually
 }

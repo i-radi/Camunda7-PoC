@@ -18,15 +18,30 @@ public class QuotaController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var quota = _dbContext.TotalQuotaTracking.ToList();
+        var quota = _dbContext.StandaloneQuotaTracking.ToList();
         return Ok(quota);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Add(TotalQuotaTracking totalQuotaTracking)
+    public async Task<IActionResult> Add(StandaloneQuotaTracking quotaTracking)
     {
-        _dbContext.Add(totalQuotaTracking);
+        _dbContext.Add(quotaTracking);
         _dbContext.SaveChanges();
+        return Ok();
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> update(StandaloneQuotaTracking quotaTracking)
+    {
+        var quota = _dbContext.StandaloneQuotaTracking.FirstOrDefault(q => q.Id == quotaTracking.Id);
+        if (quota == null) return BadRequest();
+
+        quota.Used = quotaTracking.Used;
+        quota.Reserved = quotaTracking.Reserved;
+
+        _dbContext.Update(quota);
+        _dbContext.SaveChanges();
+
         return Ok();
     }
 }

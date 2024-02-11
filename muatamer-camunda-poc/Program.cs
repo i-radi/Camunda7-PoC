@@ -10,12 +10,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionStrings:dbconnection"]);
-}, ServiceLifetime.Singleton);
+});
 builder.Services.AddDbInitializer();
 
-builder.Services.AddSingleton<IWorkflowService, WorkflowService>();
-builder.Services.AddSingleton<IMuatamerProcessService, MuatamerProcessService>();
-builder.Services.AddSingleton<IPaymentProcessService, PaymentProcessService>();
+builder.Services.AddScoped<IWorkflowService, WorkflowService>();
+builder.Services.AddScoped<IMuatamerProcessService, MuatamerProcessService>();
+builder.Services.AddScoped<IPaymentProcessService, PaymentProcessService>();
 
 builder.Services.AddHostedService<DeployWorkflows>();
 

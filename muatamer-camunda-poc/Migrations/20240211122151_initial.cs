@@ -24,19 +24,26 @@ namespace muatamer_camunda_poc.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ExternalAgents",
+                name: "IntersectionQuotaTracking",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MobileNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    State = table.Column<int>(type: "int", nullable: false)
+                    Entity1Type = table.Column<int>(type: "int", nullable: false),
+                    Entity1Id = table.Column<int>(type: "int", nullable: false),
+                    Entity2Type = table.Column<int>(type: "int", nullable: false),
+                    Entity2Id = table.Column<int>(type: "int", nullable: false),
+                    PeriodType = table.Column<int>(type: "int", nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Total = table.Column<int>(type: "int", nullable: false),
+                    Used = table.Column<int>(type: "int", nullable: false),
+                    Reserved = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ExternalAgents", x => x.Id);
+                    table.PrimaryKey("PK_IntersectionQuotaTracking", x => x.Id);
+                    table.CheckConstraint("CK_IntersectionQuotaTracking_Reserved", "Reserved <= Total - Used");
+                    table.CheckConstraint("CK_IntersectionQuotaTracking_Used", "Used <= Total");
                 });
 
             migrationBuilder.CreateTable(
@@ -54,12 +61,12 @@ namespace muatamer_camunda_poc.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PeriodicalQuotaTracking",
+                name: "StandaloneQuotaTracking",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Type = table.Column<int>(type: "int", nullable: false),
+                    EntityType = table.Column<int>(type: "int", nullable: false),
                     EntityId = table.Column<int>(type: "int", nullable: false),
                     PeriodType = table.Column<int>(type: "int", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -69,25 +76,9 @@ namespace muatamer_camunda_poc.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PeriodicalQuotaTracking", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TotalQuotaTracking",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Type = table.Column<int>(type: "int", nullable: false),
-                    EntityId = table.Column<int>(type: "int", nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Total = table.Column<int>(type: "int", nullable: false),
-                    Used = table.Column<int>(type: "int", nullable: false),
-                    Reserved = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TotalQuotaTracking", x => x.Id);
+                    table.PrimaryKey("PK_StandaloneQuotaTracking", x => x.Id);
+                    table.CheckConstraint("CK_StandaloneQuotaTracking_Reserved", "Reserved <= Total - Used");
+                    table.CheckConstraint("CK_StandaloneQuotaTracking_Used", "Used <= Total");
                 });
 
             migrationBuilder.CreateTable(
@@ -104,6 +95,29 @@ namespace muatamer_camunda_poc.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_UmrahOperators", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ExternalAgents",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MobileNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    State = table.Column<int>(type: "int", nullable: false),
+                    CountryId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ExternalAgents", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ExternalAgents_Countries_CountryId",
+                        column: x => x.CountryId,
+                        principalTable: "Countries",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -195,6 +209,11 @@ namespace muatamer_camunda_poc.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_ExternalAgents_CountryId",
+                table: "ExternalAgents",
+                column: "CountryId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ExternalAgentUmrahOperator_UmrahOperatorsId",
                 table: "ExternalAgentUmrahOperator",
                 column: "UmrahOperatorsId");
@@ -226,13 +245,13 @@ namespace muatamer_camunda_poc.Migrations
                 name: "ExternalAgentUmrahOperator");
 
             migrationBuilder.DropTable(
+                name: "IntersectionQuotaTracking");
+
+            migrationBuilder.DropTable(
                 name: "MuatamerInformations");
 
             migrationBuilder.DropTable(
-                name: "PeriodicalQuotaTracking");
-
-            migrationBuilder.DropTable(
-                name: "TotalQuotaTracking");
+                name: "StandaloneQuotaTracking");
 
             migrationBuilder.DropTable(
                 name: "ExternalAgents");

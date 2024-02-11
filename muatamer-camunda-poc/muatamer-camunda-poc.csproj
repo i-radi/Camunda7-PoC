@@ -5,6 +5,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>muatamer_camunda_poc</RootNamespace>
+		<UserSecretsId>cec52b05-6520-4d53-8562-b529fe6fc548</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
