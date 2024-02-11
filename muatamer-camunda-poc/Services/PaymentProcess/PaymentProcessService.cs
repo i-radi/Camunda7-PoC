@@ -70,15 +70,6 @@ public class PaymentProcessService : WorkflowService, IPaymentProcessService
             paymentProcessDto!.BLValidationResult = 1;
             paymentProcessDto!.IsManualNationality = false;
 
-            if (group is not null && group.MuatamerInformations.Any())
-            {
-                paymentProcessDto!.BLValidationResult = 0;
-            }
-            if (group.Country == "Egypt")
-            {
-                paymentProcessDto.IsManualNationality = true;
-            }
-
             await jobClient.ComplateTaskAsync(job.Key, paymentProcessDto);
 
             _logger.LogInformation("BL validation worker completed");
@@ -109,7 +100,7 @@ public class PaymentProcessService : WorkflowService, IPaymentProcessService
             _logger.LogInformation("Create Voucher worker received job: " + job);
 
             var paymentProcessDto = JsonSerializer.Deserialize<PaymentProcessDto>(job.Variables);
-            paymentProcessDto!.isManualPayment = true;
+            //paymentProcessDto!.isManualPayment = true;
 
             // logic
             paymentProcessDto!.CreateVoucherResult = 0;

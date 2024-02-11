@@ -21,14 +21,14 @@ public class WorkflowService : IWorkflowService
         char[] port = { '4', '3', ':' };
         var audience = zeebeUrl?.TrimEnd(port);
 
-        // docker container 
+        // server
         //ZeebeClient =
-        //    ZeebeClient.Builder()
-        //        .UseGatewayAddress("localhost:26500")
+        //    Zeebe.Client.ZeebeClient.Builder()
+        //        .UseGatewayAddress(config["CamundaServer:Url"])
         //        .UsePlainText()
         //        .Build();
 
-        // cloud-
+        // cloud
         ZeebeClient =
             Zeebe.Client.ZeebeClient.Builder()
                 .UseGatewayAddress(zeebeUrl)

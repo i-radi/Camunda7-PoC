@@ -23,8 +23,8 @@ public class DeployWorkflows : IHostedService
         await _workflowService.Deploy(BPMNFile.PaymentProcessFile);
         _paymentProcessService.StartWorkers();
 
-        await _workflowService.Deploy(BPMNFile.MuatamerProcessFile);
-        _muatamerProcessService.StartWorkers();
+        //await _workflowService.Deploy(BPMNFile.MuatamerProcessFile);
+        //_muatamerProcessService.StartWorkers();
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

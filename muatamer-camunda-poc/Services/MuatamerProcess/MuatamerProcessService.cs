@@ -105,21 +105,8 @@ public class MuatamerProcessService : WorkflowService, IMuatamerProcessService
         ZeebeClient.CreateWorker("validate-group-has-same-nationality", async (client, job) =>
         {
             var groupIdString = JSON.ToObject<GroupIdDTO>(job.Variables).GroupId;
-            int groupId = groupIdString;
 
-            var group = _dbContext.UmrahGroups
-            .Include(g => g.MuatamerInformations)
-            .FirstOrDefault(g => g.Id == groupId);
-
-            var isSameCountry = false;
-
-            if (group?.MuatamerInformations.Any() == true)
-            {
-                var firstCountryName = group.MuatamerInformations.FirstOrDefault()?.CountryName;
-                isSameCountry = group.MuatamerInformations.All(m => m.CountryName == firstCountryName);
-            }
-
-            var groupHasSameNationalityDTO = new GroupHasSameNationalityDTO { isSameNationality = isSameCountry };
+            var groupHasSameNationalityDTO = new GroupHasSameNationalityDTO { isSameNationality = true };
             await client.ComplateTaskAsync(job.Key, groupHasSameNationalityDTO);
             _logger.LogInformation("Get GroupHasSameNationality worker completed");
         });

@@ -9,6 +9,7 @@ public class UmrahGroup
     public bool IsActive { get; set; }
     public bool HasVoucher { get; set; }
     public bool VisaIssued { get; set; }
-    public string Country { get; set; }
+    public int CountryId { get; set; }
+    public Country Country { get; set; }
     public virtual ICollection<MuatamerInformation> MuatamerInformations { get; set; }
 }
