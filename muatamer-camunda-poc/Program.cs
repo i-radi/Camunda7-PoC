@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration["ConnectionStrings:dbconnection"]);
-});
+},ServiceLifetime.Singleton);
 builder.Services.AddDbInitializer();
 
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();

@@ -33,7 +33,7 @@ public class MuatamerProcessService : WorkflowService, IMuatamerProcessService
     public async Task<IProcessInstanceResponse> CreateWorkflowInstance(int groupId)
     {
         _logger.LogInformation("Creating workflow instance...");
-
+        StartWorkers();
         if (!IsGroupExist(groupId))
         {
             return null;
